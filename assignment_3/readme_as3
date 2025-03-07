@@ -1,1 +1,14 @@
+Please review this assignment as following:
+
+The code and solutions for the assignment 3 are included.
+
+
+Folder `assignment_3_q1` includes the code for question 1:
+# main.m: the main code
+# func_diff: the supplementary function for the forward/backward/centered diff
+# func_auto: the supplementary function for the automatic diff
+
+Folder `assignment_3_q2` includes the code for question 2:
+
+# main.m: the main code for integration.
 
