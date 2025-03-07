@@ -1,0 +1,15 @@
+Please review this assignment as following:
+
+Only the code for the first question in assignment 1 is included.
+
+1. submission_as1_q1: the question a)
+	# main_a.m: the main code for the solution
+	# func_arm_o.m: the supplementary code for the update the equilibrium outcomes
+	# func_eqm_iter.m: the supplementary code for the Newton's iteration
+	# func_arm_j.m: the supplementary code for the Jacobian matrix
+
+2. submission_as1_q2: the question b)
+	# main_b.m: the main code for the solution
+	# func_arm_o.m: the supplementary code for the update the equilibrium outcomes
+	# func_eqm_iter.m: the supplementary code for the simple iteration
+	
