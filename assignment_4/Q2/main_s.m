@@ -17,14 +17,8 @@ m.mu = [0.5;0.5;0.5;0.5];
 tau = csvread('data_spatial/tau.csv', 1,1);
 m.tau = tau;
 
-%tar = zeros(m.R,m.R);
-%m.tar = tar;
-
-
-
-
-%%  eq'm when tariff = 0
-tar = 9;
+%%  eq'm when both tariff = 0
+tar = 0;
 [w,X,P,L1,welfare] = s_func_eqm_iter(tar,m);
 disp(welfare)
 disp(w)
@@ -54,16 +48,16 @@ h = line(qx, wel_vec, 'Color', 'r', 'LineStyle', '-.', 'LineWidth', 2);
 [max_value, max_index] = max(wel_vec);
 tar_1 = qx(max_index);
 
-disp(['Max Welfare ', num2str(max_value)]);
+disp(['Max Welfare_1', num2str(max_value)]);
 disp(['When Tariff_1 = ', num2str(tar_1), ', Welfare_1 is maximized']);
 
-%%
+%% Nash Eqm Tariff
+
+% Test max tariff of country 2
 tar_2 = 9;
 [w,X,P,L1,welfare] = s_func_eqm_iter1(tar_2,m);
 disp(welfare)
 disp(w)
-
-%% Nash Eqm Tariff
 
 tar_vec = (0:100:5000)';
 T = length(tar_vec);
