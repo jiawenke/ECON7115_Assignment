@@ -13,7 +13,7 @@ m.z = 1;
 
 %%
 W0 = 1;
-m.J = 200; % # of grids
+m.J = 5; % # of grids
 w_vec = (1:m.J)'/m.J*W0;
 
 a = zeros(1,5); %initial guess
@@ -29,7 +29,7 @@ while diff>tol&&cc<10000
     v_mat_out = ones(m.J,1);
 
     g_vec = ones(m.J,1); % policy function: W_{t+1} = g(W_t)
-    for j=1:m.J
+    for j=2:m.J-1
         rhs_vec = ones(j,1);
         for k=1:j % k: tomorrow j: today
             % m.l=1;
