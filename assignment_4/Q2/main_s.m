@@ -21,7 +21,7 @@ m.tau = tau;
 %%  eq'm when tariff = 0
 tar_1 = 0;
 m.tar_2=0;
-[w,X,P,L1,welfare] = s_func_eqm_iter(tar_1,m);
+[w,X,P,L1,welfare] = s_func_eqm_iter1(tar_1,m);
 disp(welfare)
 disp(w)
 
@@ -34,7 +34,7 @@ L_mat = ones(T,m.R);
 
 for tt = 1:T
     tar = tar_vec(tt);
-    [w,X,P,L1,welfare] = s_func_eqm_iter(tar,m);
+    [w,X,P,L1,welfare] = s_func_eqm_iter1(tar,m);
     
     wel_vec(tt) = welfare(1);
     L_mat(tt,:) = L1;
@@ -55,14 +55,14 @@ disp(['When Tariff_1 = ', num2str(tar_1), ', Welfare_1 is maximized']);
 
 %% Unilateral Optimal tariff: fminunc
 m.tar_2=0;
-function neg_welfare = welfare_objective(tar_1, m)
-    [~, ~, ~, ~, welfare] = s_func_eqm_iter(tar_1, m);
+function neg_welfare = welfare_objective1(tar_1, m)
+    [~, ~, ~, ~, welfare] = s_func_eqm_iter1(tar_1, m);
     neg_welfare = -welfare(1)-welfare(2);
 end
 
 initial_tariff1 = 0; 
 options = optimoptions('fminunc', 'Display', 'iter', 'TolFun', 1e-6);
-[optimal_tariff, min_neg_welfare] = fminunc(@(tar_1) welfare_objective(tar_1, m), initial_tariff1, options);
+[optimal_tariff, min_neg_welfare] = fminunc(@(tar_1) welfare_objective1(tar_1, m), initial_tariff1, options);
 
 max_welfare = -min_neg_welfare;
 tar_1 = optimal_tariff;
@@ -87,7 +87,7 @@ initial_tariff2 = 0;
 while diff > tol && cc < 100
     
     % update country1's tariff
-    [optimal_tariff1] = fminunc(@(tar_1) welfare_objective(tar_1, m), initial_tariff1, options);
+    [optimal_tariff1] = fminunc(@(tar_1) welfare_objective1(tar_1, m), initial_tariff1, options);
     m.tar_1 = optimal_tariff1;
     
     % update country2's tariff
