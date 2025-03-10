@@ -1,6 +1,6 @@
 %% Equilibruim conditions
 
-function [w_new,X_new,P_new,L1_new,welfare] = s_func_eqm_update(w,X,tar,L1,P,m)
+function [w_new,X_new,P_new,L1_new,welfare] = s_func_eqm_update1(w,X,tar,L1,P,m)
 
 tarr_vec = zeros(m.R,m.R);
 tarr_vec(3,1)=tar;
