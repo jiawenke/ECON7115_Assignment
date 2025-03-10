@@ -29,7 +29,7 @@ while diff>tol&&cc<10000
     v_mat_out = ones(m.J,1);
 
     g_vec = ones(m.J,1); % policy function: W_{t+1} = g(W_t)
-    for j=2:m.J-1
+    for j=1:m.J-1
         rhs_vec = ones(j,1);
         for k=1:j % k: tomorrow j: today
             % m.l=1;
