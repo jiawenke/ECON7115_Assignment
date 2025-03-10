@@ -1,4 +1,4 @@
-function [w,X,P,L1,welfare] = s_func_eqm_iter(tar,m)
+function [w,X,P,L1,welfare] = s_func_eqm_iter1(tar,m)
 % Solving the equilibrium outcomes by simple iteration
 
 % initial guess
@@ -13,7 +13,7 @@ ww = 0.2;
 cc = 0;
 
 while diff>tol && cc<100
-   [w_new,X_new,P_new,L1_new,welfare] = s_func_eqm_update(w,X,tar,L1,P,m);
+   [w_new,X_new,P_new,L1_new,welfare] = s_func_eqm_update1(w,X,tar,L1,P,m);
 
     r = [w;X;L];
     r_new = [w_new;X_new;L1_new];
