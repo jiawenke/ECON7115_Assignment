@@ -1,4 +1,7 @@
 %% Equilibruim conditions
+% Add a loop to denote each country: 2*1 & 2*2
+% tarr_vec update outside this function and update automatically
+% some mistakes in the conditions code
 
 function [w_new,X_new,P_new,L1_new,welfare] = s_func_eqm_update1(w,X,tar,L1,P,m)
 
@@ -15,13 +18,13 @@ tarr_vec(2,3)=tar_2;
 tarr_vec(2,4)=tar_2;
 
 kappa = m.tau.*(1+tarr_vec);
-K_mat = (repmat(w./m.barA*(m.barL^m.alpha),[1,m.R]).*kappa).^(1-m.sigma);
+K_mat = (repmat(w./m.barA*(m.barL^m.alpha),[1,m.R]).*kappa).^(1-m.sigma); %m.barL should be a vector
 lambda_mat = K_mat./repmat(sum(K_mat,1),[m.R,1]); % dim1:i; dim2:n
 Xin_mat = lambda_mat.*repmat(X',[m.R,1]);
 P_new = sum(K_mat,1)'.^(1/(1-m.sigma));
 
 
-L1_new = (m.barB*X./L1./P).^(1./m.mu);
+L1_new = (m.barB*X./L1./P).^(1./m.mu); % The demoninator?
 
 X_new = w.*L1+L1_new.*sum(tarr_vec./(1+tarr_vec).*lambda_mat.*sum(Xin_mat,2),1)';
 
