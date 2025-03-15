@@ -2,6 +2,7 @@ clear
 close all
 clc
 
+
 %% Parameters
 
 m.beta = 0.95; % discouting rate
@@ -9,163 +10,125 @@ m.alpha = 0.33;
 m.gamma = 0.5;
 m.xi = 0.2;
 m.delta = 0.07;
+
+
+%% Deterministic
+
 m.z = 1;
-
-%%
-W0 = 1;
-m.J = 5; % # of grids
-w_vec = (1:m.J)'/m.J*W0;
-
-a = zeros(1,5); %initial guess
 diff = 1;
 tol = 1e-6;
 cc = 0;
 ww = 0.5;
+ a = ones(5, 1);
+% initial guess
+k_vec = [0.25;0.30;0.35;0.40;0.45];
+k_prime_star = ones(5, 1) * 0.1;
+%x = zeros(2,1);
 
+x0 = [0.5;0.02];
+% iteration
 while diff>tol&&cc<10000
-    v_vec_func = @(w) a(1) + a(2)*(w) + a(3)*(w).^2 + a(4)*(w).^3 + a(5)*(w).^4;
-    v_vec = v_vec_func(w_vec);
 
-    v_mat_out = ones(m.J,1);
+for i = 1:5
+    ki = k_vec(i);  
 
-    g_vec = ones(m.J,1); % policy function: W_{t+1} = g(W_t)
-    for j=1:m.J-1
-        rhs_vec = ones(j,1);
-        for k=1:j % k: tomorrow j: today
-            % m.l=1;
+    % options = optimoptions('fsolve', 'Display', 'off');
+    % [h] = fsolve(@(h) func_l(ki, m, h, a), x0, options);
+    % 
+    % l_star(i) = h(1);
+    % k_prime_star(i) = h(2);
 
-            % Get the optimal l*
-            n.A = (w_vec(j)^m.alpha*(1-m.alpha))^(-1/m.gamma);
-            n.B = w_vec(j);
-            n.C = (m.gamma+m.alpha)*(-1/m.gamma);
-            n.D = m.delta*w_vec(j)+w_vec(k);
+    [l_star(i), k_prime_star(i)] = solve_equations_d(m, ki, k_prime_star(i), a);
 
-            equation = @(l) n.A * n.B * l^(1 - m.alpha) - l^n.C - n.D * n.A;
+    c(i) = (ki^m.alpha * l_star(i)^(1 - m.alpha) - m.delta * ki - k_prime_star(i));
+    U(i) = (c(i)^(1 - m.gamma)) / (1 - m.gamma) - (l_star(i)^(1 + m.xi)) / (1 + m.xi);
 
-            % initial guess
-            l_0 = 1;
-
-            % use fsolve
-            options = optimoptions('fsolve', 'Display', 'iter');
-            m.l = fsolve(equation, l_0, options);
-            c_k = (1-m.alpha)*w_vec(j)^m.l-m.delta*w_vec(j)-w_vec(k);
-           
-            rhs_vec(k) = func_utility_poly(w_vec(j)-w_vec(k),m)+m.beta*v_vec(k);
-        end
-        v_mat_out(j) = max(rhs_vec);
-        g_vec(j) = w_vec(rhs_vec==max(rhs_vec)); % for graph use, here only iterate Value func
-    end
-    
-    
-    diff = max(abs(v_vec-v_mat_out));
-    cc = cc+1;
-
-    disp(diff)
-    disp(cc)
-    
-    v_vec = ww*v_mat_out + (1-ww)*v_vec;
+    k_prime = k_prime_star(i);
+    V_new(i) = U(i) + func_val(m,a,k_prime);
 end
 
-% Fit `a' using OLS
-    X = [ones(5, 1), v_vec(1:5), (v_vec(1:5)).^2, (v_vec(1:5)).^3, (v_vec(1:5)).^4]; 
-    a = (X' * X) \ (X' * v_mat_out(1:5));
-    
+% fit and update a
+ A = [ones(5, 1), k_vec, k_vec.^2, k_vec.^3, k_vec.^4];
+ a_new = (A' * A) \ (A' * V_new');
+ a = ww*a + (1-ww) * a_new;
 
-disp(a)
+ diff =  max(abs(a_new - a));
+ cc=cc+1;
+ 
+end
+disp('Optimal [a_0,...,a_4]:');
+disp(a);
 
 %% Stochastic
-a = zeros(1,5); %initial guess
-
-z_vec = [0.8;1.2];
-pi_mat = [
-    0.8, 0.2
-    0.4, 0.6]; % 0.8=\pi_LL 0.2=\pi_LH
-
-S = length(z_vec);
-
-diff = 1;
+ 
 tol = 1e-6;
-cc = 0;
-ww = 0.5;
-%%
-while diff>tol&&cc<10000
-    v_vec_func = @(w) a(1) + a(2)*(w) + a(3)*(w).^2 + a(4)*(w).^3 + a(5)*(w).^4; % 当前价值函数
-    v_mat = repmat(v_vec_func(w_vec(1:5)),[1,S]).*repmat(z_vec',[5,1]);
-
-    v_mat_out = ones(5,S);
-    g_mat = ones(5,S); % policy function: W_{t+1} = g(W_t,z_t)
-    for j=1:5
-        rhs_1 = ones(j,1);
-        rhs_2 = ones(j,1);
-        for k=1:j
-
-            % Get the optimal l*
-            n.A_1 = (z_vec(1) *w_vec(j)^m.alpha*(1-m.alpha))^(-1/m.gamma);
-            n.A_2 = (z_vec(2) *w_vec(j)^m.alpha*(1-m.alpha))^(-1/m.gamma);
-            n.B_1 = z_vec(1) * w_vec(j);
-            n.B_2 = z_vec(2) * w_vec(j);
-            n.C = (m.gamma+m.alpha)*(-1/m.gamma);
-            n.D = m.delta*w_vec(j)+w_vec(k);
-            
-            % solve l_* when Z_t=Z_L
-            equation = @(l) n.A_1 * n.B_1 * l^(1 - m.alpha) - l^n.C - n.D * n.A;
-            l1_0 = 1;
-            options = optimoptions('fsolve', 'Display', 'iter');
-            m.l_1 = fsolve(equation, l1_0, options);
-
-            % solve l_* when Z_t=Z_H
-            equation = @(l) n.A_2 * n.B_2 * l^(1 - m.alpha) - l^n.C - n.D * n.A;
-            l2_0 = 1;
-            options = optimoptions('fsolve', 'Display', 'iter');
-            m.l_2 = fsolve(equation, l2_0, options);
-            
-            % Bellman equation
-            c_k_1 = (1-m.alpha)*w_vec(j)^m.l_1-m.delta*w_vec(j)-w_vec(k);
-            c_k_2 = (1-m.alpha)*w_vec(j)^m.l_2-m.delta*w_vec(j)-w_vec(k);
-           
-            rhs_1(k) = z_vec(1)*func_utility_poly_1(c_k_1,m)+m.beta*(pi_mat(1,1)*v_mat(k,1)+pi_mat(1,2)*v_mat(k,2));
-            rhs_2(k) = z_vec(2)*func_utility_poly_2(c_k_2,m)+m.beta*(pi_mat(2,1)*v_mat(k,1)+pi_mat(2,2)*v_mat(k,2));
-        end
-
-        v_mat_out(j,1) = max(rhs_1);
-        v_mat_out(j,2) = max(rhs_2);
-        g_mat(j,1) = w_vec(rhs_1==max(rhs_1));
-        g_mat(j,2) = w_vec(rhs_2==max(rhs_2));
-    end
+max_iter = 1000;
+a = zeros(5, 1);
+k_vec = [0.55; 0.6; 0.65; 0.7; 0.75];
+z_vec = [0.8; 1.2];
+pi_mat = [
+    0.8, 0.2 
+    0.4, 0.6];
+m.S = length(z_vec);
+a = repmat(ones(5, 1), 1, m.S);
+k_prime_star_L = ones(5, 1) * 0.1;
+k_prime_star_H = ones(5, 1) * 0.1;
+diff =1;
+cc=1;
+ww=0.1;
+ 
+% Define the function to solve the optimal labor and k'
+function [l_star, k_prime_star] = solve_equations_s(m, ki, z, k_prime_star_prev, a)
     
-    diff = max(abs(v_mat(:)-v_mat_out(:)));
-    cc = cc+1;
-    disp(diff)
-    disp(cc)
+    eq1 = @(l) l^(m.xi + m.alpha) - (z * ki^m.alpha * l^(1 - m.alpha) - m.delta * ki - k_prime_star_prev)^(-m.gamma) * (1 - m.alpha) * z * ki^m.alpha;
+    options = optimoptions('fsolve', 'Display', 'off');
+    l_star = fsolve(eq1, 0.51, options);
+ 
     
-    v_mat = ww*v_mat_out + (1-ww)*v_mat;
+    eq2 = @(k_prime) (z * ki^m.alpha * l_star^(1 - m.alpha) - m.delta * ki - k_prime)^(-m.gamma) - m.beta * (a(2) + 2 * a(3) * k_prime + 3 * a(4) * k_prime^2 + 4 * a(5) * k_prime^3);
+    k_prime_star = fsolve(eq2, 0.5, options);
+end 
+
+% Define the value function of V(k'*)
+function y = func_value(k_prime_star,a)
+y = a(1) + a(2)*k_prime_star + a(3)*k_prime_star^2 + a(4)*k_prime_star^3 + a(5)*k_prime_star^4;
 end
 
-% Fit `a' using OLS
-  X = [ones(5, 1), v_vec(1:5), (v_vec(1:5)).^2, (v_vec(1:5)).^3, (v_vec(1:5)).^4]; 
-  a = (X' * X) \ (X' * v_mat_out(1:5));
+% iteration
+while diff > tol && cc < 1000
+    V_new_L = zeros(5, 1);
+    V_new_H = zeros(5, 1);
     
-disp(a)
+    for i = 1:5 
+        ki = k_vec(i);
+        
+        % Solve the optimals
+        [l_star_L(i), k_prime_star_L(i)] = solve_equations_s(m, ki, z_vec(1), k_prime_star_L(i), a(:, 1));
+        [l_star_H(i), k_prime_star_H(i)] = solve_equations_s(m, ki, z_vec(2), k_prime_star_H(i), a(:, 2));
+        
+        % Calcualte the consumption
+        c_L(i) = ki^m.alpha * l_star_L(i)^(1 - m.alpha) - m.delta * ki - k_prime_star_L(i);
+        c_H(i) = ki^m.alpha * l_star_H(i)^(1 - m.alpha) - m.delta * ki - k_prime_star_H(i);
+        
+        % Calculate the Utility of current period
+        U_L(i) = (c_L(i)^(1 - m.gamma)) / (1 - m.gamma) - (l_star_L(i)^(1 + m.xi)) / (1 + m.xi);
+        U_H(i) = (c_H(i)^(1 - m.gamma)) / (1 - m.gamma) - (l_star_H(i)^(1 + m.xi)) / (1 + m.xi);
+        
+        % Calculate the Value of current period
+        V_new_L(i) = U_L(i) + m.beta * pi_mat(1, 1)*func_value(k_prime_star_L(i),a(:,1))+ pi_mat(1, 2)*func_value(k_prime_star_L(i),a(:,2));  
+        V_new_H(i) = U_H(i) + m.beta * pi_mat(1, 1)*func_value(k_prime_star_H(i),a(:,1))+ pi_mat(1, 2)*func_value(k_prime_star_H(i),a(:,2));
+    end 
+    
+    % Fit and update a
+    A = [ones(5, 1), k_vec, k_vec.^2, k_vec.^3, k_vec.^4];
+    V_new = [V_new_L, V_new_H];
+    a_new = (A' * A) \ (A' * V_new);
 
-%% Utility functions by z_t
+    diff = max(abs(a_new(:) - a(:)));
+    cc = cc + 1;
 
-% z_t=1
-function y = func_utility_poly(c,m)
-
-y = c.^(1-m.gamma)/(1-m.gamma)-m.l^(1+m.xi)/(1+m.xi);
-
-end
-
-% z_t=z_L
-function y = func_utility_poly_1(c,m)
-
-y = c.^(1-m.gamma)/(1-m.gamma)-m.l_1^(1+m.xi)/(1+m.xi);
-
-end
-
-% z_t=z_H
-function y = func_utility_poly_2(c,m)
-
-y = c.^(1-m.gamma)/(1-m.gamma)-m.l_2^(1+m.xi)/(1+m.xi);
-
-end
+    a = ww * a + (1 - ww) * a_new;
+end 
+ 
+disp('Optimal a:');
+disp(a);
