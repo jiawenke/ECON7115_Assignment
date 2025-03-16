@@ -11,7 +11,7 @@ m.barA = ones(m.R,1);
 m.barB = ones(m.R,1);
 m.barL = ones(m.R,1);
 m.alpha = 0.1;
-m.mu = [0.5;0.5;0.5;0.5];
+m.mu = [0.4;0.4;0.5;0.5];
 
 tau = csvread('data_spatial/tau.csv', 1,1);
 m.tau = tau;
@@ -55,18 +55,12 @@ disp(['When Tariff_1 = ', num2str(tar_1_op), ', Welfare_1 is maximized']);
 
 %% Unilateral Optimal tariff: fminunc
 
-function neg_welfare = welfare_objective(m,tar_1,tar_2)
-    tarr_vec = func_tar(m,tar_1,tar_2);
-    [~, ~, ~, ~, welfare] = func_eqm_iter(tarr_vec, m);
-    neg_welfare = -welfare(1)-welfare(2);
-end
-
 tar_2=0;
 tarr_vec_0 = zeros(4,4);
 tarr_vec = func_tar(m,tar_1,tar_2);
 
 options = optimoptions('fminunc', 'Display', 'iter', 'TolFun', 1e-6);
-[optimal_tariff, min_neg_welfare] = fminunc(@(tar_1) welfare_objective(m,tar_1,tar_2), 0, options);
+[optimal_tariff, min_neg_welfare] = fminunc(@(tar_1) welfare_objective_both(m,tar_1,tar_2,1), 0, options);
 
 max_welfare = -min_neg_welfare;
 
@@ -87,20 +81,6 @@ cc = 0;
 
 initial_tariff1 = 0;
 initial_tariff2 = 0;
-
-function neg_welfare = welfare_objective_both(m, tar_1, tar_2, country_index)
-    tarr_vec = func_tar(m, tar_1, tar_2);
-    [~, ~, ~, ~, welfare] = func_eqm_iter(tarr_vec, m);
-    
-    if country_index == 1
-        neg_welfare = -welfare(1) - welfare(2); % country 1
-    elseif country_index == 2
-        neg_welfare = -welfare(3) - welfare(4); % country 2
-    else
-        error('Invalid country index. Use 1 or 2.');
-    end
-end
-
 
 
 while diff > tol && cc < 100
