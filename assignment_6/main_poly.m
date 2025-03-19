@@ -41,6 +41,7 @@ for i = 1:5
     [l_star(i), k_prime_star(i)] = solve_equations_d(m, ki, k_prime_star(i), a);
 
     c(i) = (ki^m.alpha * l_star(i)^(1 - m.alpha) - m.delta * ki - k_prime_star(i));
+    % c(i) = max((ki^m.alpha * l_star(i)^(1 - m.alpha) - m.delta * ki - k_prime_star(i)),0.01);
     U(i) = (c(i)^(1 - m.gamma)) / (1 - m.gamma) - (l_star(i)^(1 + m.xi)) / (1 + m.xi);
 
     k_prime = k_prime_star(i);
