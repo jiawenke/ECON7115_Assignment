@@ -25,6 +25,7 @@ csvwrite('data.csv',[m.y,m.x,m.z]) % save the data in to csv file
 w_mat = eye(K);
 
 theta0 = zeros(J,1); % initial guess
+
 % w0 should be the inverse of the covariance matrix
 m0 = func_mm1(theta0,m);
 w_mat = (m0'* m0) / size(m0,1);
@@ -32,13 +33,11 @@ w_mat = (m0'* m0) / size(m0,1);
 options = optimoptions('fminunc','Algorithm','quasi-newton','Display','iter',...
     'MaxIterations',500,'MaxFunctionEvaluations',100000,'OptimalityTolerance',1e-8);
 
-% [theta_p,fval,exitflag,output] = fminunc(@(theta)func_obj_2sgmm(theta,w_mat,m),theta0,options);
-% 
-% w_mat = func_optw(theta_p,m);
-
 [htheta,fval,exitflag,output] = fminunc(@(theta)func_obj_1sgmm(theta,w_mat,m),theta0,options);
 
 disp([theta_true,htheta])
+
+
 %%
 m_final = func_mm1(htheta,m);
 S_final = (m_final' * m_final) / size(m_final,1);
