@@ -8,6 +8,7 @@ lambda_mat = (M.*T_Bar)./M_mat;
 rng(123); % set seed
 u = sort(rand(m.J, 2));
 
+%initial guess should be CES results
 sn = w;
 options = optimoptions('fsolve','Display','iter','MaxFunEvals',1e6,'MaxIter',1000,'TolFun',1e-10,'TolX',1e-10);
 [sn] = fsolve(@(sn)func_sn(m,w,D,sn),sn,options);
@@ -21,15 +22,15 @@ options = optimoptions('fsolve','Display','iter','MaxFunEvals',1e6,'MaxIter',100
 [s_j] = fsolve(@(s_j)func_sj(m,P,D,s_j,c_nj),s_j,options);
 s_nj = s_j;
 
-% compute yita ? 虚数
+% compute yita ? 虚数,可能是由于initial guess引起了sj是负数，导致这里出现虚数
 yita_mat = s_nj.^(m.epsilon/m.sigma).*exp((1-s_nj.^(m.epsilon/m.sigma))./m.epsilon).*s_nj.*c_nj.^(m.theta-1);
 yita = sum(yita_mat,1);
 
-% compute nu_P 虚数
+% compute nu_P 虚数 same reason
 nu_mat = m.theta*m.sigma./(m.sigma-s_nj.^(m.epsilon/m.theta)).*s_nj.*c_nj.^(m.theta);
 nu_P = c_star./m.J*sum(nu_mat,1);
 
-% update Dn ? H(x)
+% update Dn ? H(x) gammainc function
 MT_mat = M.*T_Bar.^m.theta;
 H_mat = func_hx(m,s_nj).*c_nj^(m.theta-1);
 D_new = D.*(MT_mat.*c_star./m.J*m.theta*sum(H_mat,2))^(1/(1+m.theta));
@@ -40,7 +41,7 @@ fmkt_cost = w.*m.F.*c_star.^m.theta*sum(MT_mat,1);
 net_prof = yita.*lambda_mat.*X-w.*m.F.*c_star.^m.theta*M.*T_Bar^m.theta;
 w_new = prod + fmkt_cost + net_prof;
 
-% update M_i, what is f^e?
+% update M_i, what is f^e? f^e=1
 M_new = net_prof./w./f;
 
 % update P_n
