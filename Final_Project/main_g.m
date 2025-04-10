@@ -13,7 +13,7 @@ m.epsilon = 2*m.sigma;
 m.T = [2;1]; % scale parateter of pareto distribution
 m.L = [15;1]; % labor endowment
 m.F = [1;1]; % fixed mkt cost
-
+m.f = [1;1];
 m.J = 5; % # of numbers drawn from U
 %% iceberg trade cost
 m.tau = 2*(1-eye(m.N))+eye(m.N);
