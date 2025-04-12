@@ -1,4 +1,3 @@
-
 clear
 close all
 clc
@@ -13,12 +12,12 @@ m.epsilon = 2*m.sigma;
 % country level parameters
 m.T = [2;1]; % scale parateter of pareto distribution
 m.L = [15;10]; % labor endowment
-m.F = [1;1]; % fixed mkt cost
+m.F = [10;10]; % fixed mkt cost
 m.f = [1;1]; % fixed entry cost
 m.J = 10; % # of numbers drawn from U
 
 %% iceberg trade cost
-m.tau = 2*(1-eye(m.N))+eye(m.N);
+m.tau = 1.5*(1-eye(m.N))+eye(m.N);
 
 %% Equiliburium results: CES case
 [w_new,X_new,M_new,P_new,c_star] = func_iter(m);
@@ -32,12 +31,9 @@ m.P_ces = P_new;
 disp([m.w_ces,m.M_ces,m.P_ces,m.D_ces]);
 
 %% verify c_star
-% pi = w_new.*m.F; % w_n*F_n=cutoff profit
-% pi_mat = ((m.sigma*pi)./(P_new.^(m.sigma-1).*X_new)).^(1/(1-m.sigma));
-% c_star = ((m.sigma-1)/m.sigma).*(pi_mat);
 
 T_Bar = m.T.^(1/m.theta)./(m.w_ces.*m.tau);
-a = T_Bar^(-1);
+a = 1./T_Bar;
 b = (m.sigma-1)/m.sigma*exp(1/m.epsilon).*m.D_ces.*m.P_ces;
 if c_star < min(a,b)
     disp('c_star is verified')
