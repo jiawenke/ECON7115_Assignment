@@ -3,7 +3,7 @@ use "/Users/jiawenke/Downloads/CASIF_98_07.dta", clear
 gen k = ln(capital+1)
 gen l = ln(employee+1)
 gen y = ln(output+1)
-gen m = ln(investment+1)  // intermediate
+gen m = ln(inter_input+1)  // intermediate
   
 gen k2 = k^2
 gen l2 = l^2
