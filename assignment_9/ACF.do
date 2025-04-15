@@ -18,7 +18,7 @@ gen m3 = m^3
 gen klm = k*l*m
 
 reg y k l kl km lm klm
-predict phi_hat  // 这是Φ(k,l,m)的估计值
+predict phi_hat
 
 sort firm_code year
 
@@ -39,7 +39,7 @@ program define acf_moment
     scalar `beta_l' = `at'[1,2]
     scalar `beta_m' = `at'[1,3]
     
-    * 临时变量
+    * temp vars
     tempvar omega omega_lag g_omega xi
     
     * omega(beta_k, beta_l, beta_m)
