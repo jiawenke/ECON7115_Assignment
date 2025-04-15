@@ -4,7 +4,8 @@ gen k = ln(capital+1)
 gen l = ln(employee+1)
 gen y = ln(output+1)
 gen m = ln(inter_input+1)  // intermediate
-  
+
+* Stage-one
 gen k2 = k^2
 gen l2 = l^2
 gen m2 = m^2
@@ -16,29 +17,29 @@ gen l3 = l^3
 gen m3 = m^3
 gen klm = k*l*m
 
-reg y k l m k2 l2 m2 kl km lm
-predict phi_hat
+reg y k l kl km lm klm
+predict phi_hat  // 这是Φ(k,l,m)的估计值
 
 sort firm_code year
 
-* GMM conditions of ACF
+* GMM Function
 capture program drop acf_moment
 
 program define acf_moment
     syntax varlist [if] [in], at(name)
     tokenize `varlist'
-  * residuls
-    local y1 `1'
-    local y2 `2'
-    local y3 `3'
+* Residuals
+    local y1 `1'  // capital
+    local y2 `2'  // labor
+   
     
-    * Beta
+    * Coefficients
     tempname beta_k beta_l beta_m
-    scalar `beta_k' = `at'[1,1]  // beta_capital
-    scalar `beta_l' = `at'[1,2]  // beta_labor
-    scalar `beta_m' = `at'[1,3]  // beta_interm
+    scalar `beta_k' = `at'[1,1]
+    scalar `beta_l' = `at'[1,2]
+    scalar `beta_m' = `at'[1,3]
     
-    * temp var
+    * 临时变量
     tempvar omega omega_lag g_omega xi
     
     * omega(beta_k, beta_l, beta_m)
@@ -47,7 +48,8 @@ program define acf_moment
     * lagged omega
     qui by firm_code: gen double `omega_lag' = `omega'[_n-1] if year == year[_n-1] + 1
     
-    * approximation & markov process
+    * Markov transition：omega_t = g(omega_{t-1}) + xi_t
+    * Approximation
     qui reg `omega' `omega_lag' c.`omega_lag'#c.`omega_lag' if !missing(`omega_lag')
     qui predict double `g_omega' if !missing(`omega_lag')
     qui gen double `xi' = `omega' - `g_omega' if !missing(`omega_lag')
@@ -55,21 +57,25 @@ program define acf_moment
     * Moment conditions
     * 1. E[xi_t * k_t] = 0
     * 2. E[xi_t * l_{t-1}] = 0
-    * 3. E[xi_t * m_{t-1}] = 0
-    replace `y1' = `xi' if !missing(`xi')
-    replace `y2' = `xi' if !missing(`xi')
-    replace `y3' = `xi' if !missing(`xi')
+    replace `y1' = `xi'*k if !missing(`xi')
+    replace `y2' = `xi'*l_lag if !missing(`xi')
 end
 
-* lagged labor and interm
+* lagged labor
 sort firm_code year
 by firm_code: gen l_lag = l[_n-1] if year == year[_n-1] + 1
-by firm_code: gen m_lag = m[_n-1] if year == year[_n-1] + 1
 
 * GMM
-gmm acf_moment, nequations(3) parameters(beta_k beta_l beta_m) ///
-    instruments(1: k) ///
-    instruments(2: l_lag) ///
-    instruments(3: m_lag) ///
-    winitial(identity) twostep ///
-    from(beta_k = 0.3 beta_l = 0.6 beta_m = 0.4)
+gmm acf_moment, nequations(2) parameters(beta_k beta_l beta_m) instruments(k l_lag) winitial(identity) onestep from(beta_k = 0.7 beta_l = 0.3 beta_m = 0.1)
+
+* package
+replace firm_code = subinstr(firm_code, "SZ", "", .)
+
+sort  firm_code  year
+gen exit = 0
+replace exit=1  if  firm_code[_n]!=firm_code[_n+1]&year!=2007
+
+destring firm_code, gen (firm_code_num)
+
+xtset firm_code_num year
+acfest y, free(l) state(k) proxy(m) 
